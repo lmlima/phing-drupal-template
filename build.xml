@@ -789,7 +789,7 @@ This target sets up many of the common resources used throughout the build.
 All other targets except dependencies for this target should depend on this
 unless specifically stated why. -->
   <target name="init"
-          depends="load-properties, setup-dirs, make, setup-filesets"
+          depends="load-properties, setup-dirs, composer-install, make, setup-filesets"
           unless="project.initialized">
     <!-- Set property to prevent target from being executed multiple times -->
     <property name="project.initialized" value="true"/>
@@ -871,6 +871,22 @@ root directory. -->
       </then>
     </if>
   </target>
+
+
+<!-- ### Run composer install
+ -->
+  <target name="composer-install"
+          depends="setup-dirs">
+    <exec command="which composer" outputProperty="composer.path" />
+    <composer command="install" composer="${composer.path}">
+      <arg value="--dev" />
+      <arg value="--working-dir" />
+      <arg path="${project.builddir}" />
+    </composer>
+    <autoloader autoloaderpath="${project.builddir}/vendor/autoload.php" />
+
+  </target>
+
 
 <!-- ### Setup directories
 
@@ -1217,7 +1233,7 @@ Configuration of which installation profile and database to use in done in
 
   <!-- ### Setup Phing Drush integration -->
   <target name="setup-phing-drush"
-          depends="setup-dirs" >
+          depends="setup-dirs, composer-install" >
     <!-- Clone the project -->
     <phingcall target="setup-git-repo">
       <property name="repo.dir"
@@ -1234,6 +1250,7 @@ Configuration of which installation profile and database to use in done in
 
     <!-- Run drush from the project Drupal directory -->
     <property name="drush.root" value="${project.drupal.dir}"/>
+    <property name="drush.bin" value="${project.builddir}/vendor/drush/drush/drush"/>
   </target>
 
    <!-- ### Setup Rhino
